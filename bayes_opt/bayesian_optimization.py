@@ -200,10 +200,10 @@ class BayesianOptimization(Observable):
                              y_max=self._space.target.max(),
                              bounds=self._space.bounds,
                              random_state=self._random_state)
-
-        x_to_prob = self._space.array_to_params(suggestion)
         if self.decimal_to_search is not None:
-            x_to_prob = x_to_prob.round(self.decimal_to_search)
+            suggestion = suggestion.round(self.decimal_to_search)
+        x_to_prob = self._space.array_to_params(suggestion)
+
         return x_to_prob
 
     def _prime_queue(self, init_points):
