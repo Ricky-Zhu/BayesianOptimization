@@ -89,9 +89,10 @@ class BayesianOptimization(Observable):
                  constraint=None,
                  random_state=None,
                  verbose=2,
-                 bounds_transformer=None):
+                 bounds_transformer=None,
+                 decimal_to_search=None):
         self._random_state = ensure_rng(random_state)
-
+        self.decimal_to_search = decimal_to_search
         self._queue = Queue()
 
         # Internal GP regressor
@@ -200,7 +201,10 @@ class BayesianOptimization(Observable):
                              bounds=self._space.bounds,
                              random_state=self._random_state)
 
-        return self._space.array_to_params(suggestion)
+        x_to_prob = self._space.array_to_params(suggestion)
+        if self.decimal_to_search is not None:
+            x_to_prob = x_to_prob.round(self.decimal_to_search)
+        return x_to_prob
 
     def _prime_queue(self, init_points):
         """Make sure there's something in the queue at the very beginning."""
@@ -208,7 +212,10 @@ class BayesianOptimization(Observable):
             init_points = max(init_points, 1)
 
         for _ in range(init_points):
-            self._queue.put(self._space.random_sample())
+            if self.decimal_to_search is not None:
+                self._queue.put(self._space.random_sample().round(self.decimal_to_search))
+            else:
+                self._queue.put(self._space.random_sample())
 
     def _prime_subscriptions(self):
         if not any([len(subs) for subs in self._events.values()]):
