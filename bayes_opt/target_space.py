@@ -23,6 +23,7 @@ class TargetSpace(object):
     >>> y = space.register_point(x)
     >>> assert self.max_point()['max_val'] == y
     """
+
     def __init__(self, target_func, pbounds, random_state=None):
         """
         Parameters
@@ -257,6 +258,7 @@ class ConstrainedTargetSpace(TargetSpace):
     """
     Expands TargetSpace to incorporate constraints.
     """
+
     def __init__(self,
                  target_func,
                  constraint: ConstraintModel,
@@ -291,7 +293,7 @@ class ConstrainedTargetSpace(TargetSpace):
         self._params = np.concatenate([self._params, x.reshape(1, -1)])
         self._target = np.concatenate([self._target, [target]])
         self._constraint_values = np.concatenate([self._constraint_values,
-                                                 [constraint_value]])
+                                                  [constraint_value]])
 
     def probe(self, params):
         x = self._as_array(params)
@@ -301,7 +303,11 @@ class ConstrainedTargetSpace(TargetSpace):
         except KeyError:
             params = dict(zip(self._keys, x))
             target = self.target_func(**params)
-            constraint_value = self._constraint.eval(**params)
+            if type(target) == np.float64:
+                constraint_value = self._constraint.eval(**params)
+            else:
+                target, constraint_value = target
+            # constraint_value = self._constraint.eval(**params)
             self.register(x, target, constraint_value)
         return target, constraint_value
 
@@ -347,5 +353,5 @@ class ConstrainedTargetSpace(TargetSpace):
                 self._constraint_values,
                 params,
                 self._constraint.allowed(self._constraint_values)
-                )
+            )
         ]
